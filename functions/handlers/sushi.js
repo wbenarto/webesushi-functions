@@ -55,28 +55,28 @@ exports.createSushi = (req, res) => {
     });
 };
 
-exports.deleteSushi = (req, res) => {
-  const document = db.doc(`/sushi/${req.params.sushiId}`);
-  document
-    .get()
-    .then((doc) => {
-      if (!doc.exists) {
-        return res.status(404).json({ error: "Sushi not found" });
-      }
-      if (doc.data().userHandle !== req.user.handle) {
-        return res.status(403).json({ error: "Unauthorized" });
-      } else {
-        return document.delete();
-      }
-    })
-    .then(() => {
-      res.json({ message: "Sushi deleted succesfully" });
-    })
-    .catch((err) => {
-      console.error(err);
-      return res.status(500).json({ error: err.code });
-    });
-};
+// exports.deleteSushi = (req, res) => {
+//   const document = db.doc(`/sushi/${req.params.sushiId}`);
+//   document
+//     .get()
+//     .then((doc) => {
+//       if (!doc.exists) {
+//         return res.status(404).json({ error: "Sushi not found" });
+//       }
+//       if (doc.data().userHandle !== req.user.handle) {
+//         return res.status(403).json({ error: "Unauthorized" });
+//       } else {
+//         return document.delete();
+//       }
+//     })
+//     .then(() => {
+//       res.json({ message: "Sushi deleted succesfully" });
+//     })
+//     .catch((err) => {
+//       console.error(err);
+//       return res.status(500).json({ error: err.code });
+//     });
+// };
 
 // fetch one sushi
 exports.getSushi = (req, res) => {
