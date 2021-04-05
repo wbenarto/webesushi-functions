@@ -19,6 +19,7 @@ const {
   uploadImage,
   addUserDetails,
   getAuthenticatedUser,
+  getUserDetails,
 } = require("./handlers/users");
 
 // Sushi Routes
@@ -37,6 +38,8 @@ app.post("/login", logIn);
 app.post("/user/image", FBAuth, uploadImage);
 app.post("/user", FBAuth, addUserDetails);
 app.get("/user", FBAuth, getAuthenticatedUser);
+app.get("/user/:handle", getUserDetails);
+// app.post("/notifications", FBAuth, markNotificiationsRead);
 
 exports.api = functions.https.onRequest(app);
 
