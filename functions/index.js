@@ -3,6 +3,10 @@ const functions = require("firebase-functions");
 const app = require("express")();
 
 const FBAuth = require("./util/fbAuth");
+
+const cors = require('cors')
+app.use(cors())
+
 const { db } = require("./util/admin");
 const {
   getAllSushi,
@@ -20,6 +24,7 @@ const {
   addUserDetails,
   getAuthenticatedUser,
   getUserDetails,
+  markNotificationsRead,
 } = require("./handlers/users");
 
 // Sushi Routes
@@ -39,7 +44,7 @@ app.post("/user/image", FBAuth, uploadImage);
 app.post("/user", FBAuth, addUserDetails);
 app.get("/user", FBAuth, getAuthenticatedUser);
 app.get("/user/:handle", getUserDetails);
-// app.post("/notifications", FBAuth, markNotificiationsRead);
+app.post("/notifications", FBAuth, markNotificationsRead);
 
 exports.api = functions.https.onRequest(app);
 
@@ -88,7 +93,10 @@ exports.createNotificationOnComment = functions.firestore
     db.doc(`/sushi/${snapshot.data().sushiId}`)
       .get()
       .then((doc) => {
-        if (doc.exists) {
+        if (
+          doc.exists &&
+          doc.data().userHandle !== snapshot.data().userHandle
+        ) {
           return db.doc(`/notifications/${snapshot.id}`).set({
             createdAt: new Date.toISOString(),
             recipient: doc.data().userHandle,
@@ -99,11 +107,66 @@ exports.createNotificationOnComment = functions.firestore
           });
         }
       })
-      .then(() => {
-        return;
-      })
       .catch((err) => {
         console.error(err);
         return;
       });
+  });
+
+exports.onUserImageChange = functions.firestore
+  .document("/users/{userId}")
+  .onUpdate((change) => {
+    console.log(change.before.data());
+    console.log(change.after.data());
+    if (change.before.data().imageUrl !== change.after.data().imageUrl) {
+      console.log("image has changed");
+
+      const batch = db.batch();
+
+      return db
+        .collection("sushi")
+        .where("userHandle", "==", change.before.data().handle)
+        .get()
+        .then((data) => {
+          data.forEach((doc) => {
+            const sushi = db.doc(`/sushi/${doc.id}`);
+            batch.update(sushi, { userImage: change.after.data().imageUrl });
+          });
+
+          return batch.commit();
+        });
+    }
+  });
+
+exports.onSushiDelete = functions.firestore
+  .document("/sushi/{sushiId}")
+  .onDelete((snapshot, context) => {
+    const sushiId = context.params.sushiId;
+    const batch = db.batch();
+    return db
+      .collection("comments")
+      .where("sushiId", "==", sushiId)
+      .get()
+      .then((data) => {
+        data.forEach((doc) => {
+          batch.delete(db.doc(`/comments/${doc.id}`));
+        });
+        return db.collection("likes").where("sushiId", "==", "sushiId").get();
+      })
+      .then((data) => {
+        data.forEach((doc) => {
+          batch.delete(db.doc(`/likes/${doc.id}`));
+        });
+        return db
+          .collection("notifications")
+          .where("sushiId", "==", "sushiId")
+          .get();
+      })
+      .then((data) => {
+        data.forEach((doc) => {
+          batch.delete(db.doc(`/notifications/${doc.id}`));
+        });
+        return batch.commit();
+      })
+      .catch((err) => console.error(err));
   });
