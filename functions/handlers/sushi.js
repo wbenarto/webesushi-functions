@@ -199,6 +199,8 @@ exports.unlikeSushi = (req, res) => {
 
   let sushiData;
 
+  console.log(likeDocument, sushiDocument);
+
   sushiDocument
     .get()
     .then((doc) => {
@@ -215,7 +217,8 @@ exports.unlikeSushi = (req, res) => {
         return res.status(400).json({ error: "Sushi not liked" });
       } else {
         return db
-          .doc(`/likes/${data.docs[0].data().id}`)
+          .collection("likes")
+          .doc(`${data.docs[0].id}`)
           .delete()
           .then(() => {
             sushiData.likeCount--;

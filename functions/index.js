@@ -4,8 +4,8 @@ const app = require("express")();
 
 const FBAuth = require("./util/fbAuth");
 
-const cors = require('cors')
-app.use(cors())
+const cors = require("cors");
+app.use(cors());
 
 const { db } = require("./util/admin");
 const {
@@ -28,7 +28,7 @@ const {
 } = require("./handlers/users");
 
 // Sushi Routes
-app.get("/sushi", getAllSushi);
+app.get("/sushis", getAllSushi);
 app.post("/sushi", FBAuth, createSushi);
 app.get("/sushi/:sushiId", getSushi);
 app.post("/sushi/:sushiId/comment", FBAuth, commentOnSushi);
@@ -51,12 +51,20 @@ exports.api = functions.https.onRequest(app);
 exports.createNotificationOnLike = functions.firestore
   .document("likes/{id}")
   .onCreate((snapshot) => {
-    db.doc(`/sushi/${snapshot.data().sushiId}`)
+    console.log("wehre can we ese this snapshot?? " + snapshot.toString());
+
+    return db
+      .doc(`/sushi/${snapshot.data().sushiId}`)
       .get()
       .then((doc) => {
-        if (doc.exists) {
-          return db.doc(`/notifications/${snapshot.id}`).set({
-            createdAt: new Date.toISOString(),
+        console.log("document here webe " + doc);
+        if (
+          doc.exists
+          // &&
+          // doc.data().userHandle !== snapshot.data().userHandle
+        ) {
+          return db.collection("notifications").doc(`${snapshot.id}`).set({
+            createdAt: new Date().toISOString(),
             recipient: doc.data().userHandle,
             sender: snapshot.data().userHandle,
             type: "like",
@@ -64,9 +72,6 @@ exports.createNotificationOnLike = functions.firestore
             sushiId: doc.id,
           });
         }
-      })
-      .then(() => {
-        return;
       })
       .catch((err) => {
         console.error(err);
@@ -77,28 +82,33 @@ exports.createNotificationOnLike = functions.firestore
 exports.deleteNotificationOnUnlike = functions.firestore
   .document("likes/{id}")
   .onDelete((snapshot) => {
-    db.doc(`/notifications/${snapshot.id}`)
+    return db
+      .collection("notifications")
+      .doc(`${snapshot.id}`)
       .delete()
-      .then(() => {
-        return;
-      })
       .catch((err) => {
         console.error(err);
       });
   });
 
 exports.createNotificationOnComment = functions.firestore
-  .document(`comments/{id}`)
+  .document("comments/{id}")
   .onCreate((snapshot) => {
-    db.doc(`/sushi/${snapshot.data().sushiId}`)
+    // console.log("wehre can we ese this snapshot?? " + snapshot.toString());
+
+    return db
+      .doc(`/sushi/${snapshot.data().sushiId}`)
       .get()
       .then((doc) => {
+        console.log("doc heere webe " + snapshot.data().userHandle);
         if (
-          doc.exists &&
-          doc.data().userHandle !== snapshot.data().userHandle
+          doc.exists
+          // &&
+          // doc.data().userHandle !== snapshot.data().userHandle
         ) {
-          return db.doc(`/notifications/${snapshot.id}`).set({
-            createdAt: new Date.toISOString(),
+          console.log("we got thru" + snapshot.id);
+          return db.collection("notifications").doc(`${snapshot.id}`).set({
+            createdAt: new Date().toISOString(),
             recipient: doc.data().userHandle,
             sender: snapshot.data().userHandle,
             type: "comment",
