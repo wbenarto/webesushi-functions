@@ -13,9 +13,12 @@ exports.getAllSushi = (req, res) => {
           desc: doc.data().desc,
           image: doc.data().sushiImage,
           dishPoint: doc.data().dishPoints,
+          sustainability: doc.data().sustainabilityPoints,
           ingredients: doc.data().ingredients,
           type: doc.data().type,
           category: doc.data().category,
+          likes: doc.data().likeCount,
+          userHandle: doc.data().userHandle,
         });
       });
       return res.json(sushis);
