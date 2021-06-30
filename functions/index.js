@@ -59,9 +59,8 @@ exports.createNotificationOnLike = functions.firestore
       .then((doc) => {
         console.log("document here webe " + doc);
         if (
-          doc.exists
-          // &&
-          // doc.data().userHandle !== snapshot.data().userHandle
+          doc.exists &&
+          doc.data().userHandle !== snapshot.data().userHandle
         ) {
           return db.collection("notifications").doc(`${snapshot.id}`).set({
             createdAt: new Date().toISOString(),
@@ -75,7 +74,6 @@ exports.createNotificationOnLike = functions.firestore
       })
       .catch((err) => {
         console.error(err);
-        return;
       });
   });
 
@@ -102,9 +100,8 @@ exports.createNotificationOnComment = functions.firestore
       .then((doc) => {
         console.log("doc heere webe " + snapshot.data().userHandle);
         if (
-          doc.exists
-          // &&
-          // doc.data().userHandle !== snapshot.data().userHandle
+          doc.exists &&
+          doc.data().userHandle !== snapshot.data().userHandle
         ) {
           console.log("we got thru" + snapshot.id);
           return db.collection("notifications").doc(`${snapshot.id}`).set({
