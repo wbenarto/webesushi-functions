@@ -38,20 +38,21 @@ exports.createSushi = (req, res) => {
     userHandle: req.user.handle,
     sushiImage: req.user.imageUrl,
     dishPoints: req.body.dishPoints,
-    ingredients: req.body.ingredients,
+    ingredients: [...req.body.ingredients],
     type: req.body.type,
     category: req.body.category,
     createdAt: new Date().toISOString(),
     likeCount: 0,
     commentCount: 0,
   };
-
+  console.log(newSushi + " newsushihere " + req.body.name);
   db.collection("sushi")
     .add(newSushi)
     .then((doc) => {
       const resSushi = newSushi;
       resSushi.sushiId = doc.id;
       res.json(resSushi);
+      console.log(res.json(resSushi));
     })
     .catch((err) => {
       res.status(500).json({ error: "something went wrong" });
