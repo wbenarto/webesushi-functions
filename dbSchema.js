@@ -7,6 +7,8 @@ let db = {
       ingredients: [""],
       type: "",
       category: "",
+      difficultyScore: '',
+      steps: [{step:'', imageURL: ''}]
     },
   ],
   comments: [
